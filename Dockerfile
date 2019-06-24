@@ -1,14 +1,27 @@
 FROM ubuntu:18.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update &&  apt-get install -y libxerces-c-dev qt4-dev-tools freeglut3-dev libmotif-dev tk-dev cmake libxpm-dev libxmu-dev libxi-dev wget
+RUN apt-get update &&  apt-get install -y libxerces-c-dev \
+        qt4-dev-tools \
+        freeglut3-dev \
+        libmotif-dev \
+        tk-dev \
+        cmake \
+        libxpm-dev \
+        libxmu-dev \
+        libxi-dev \
+        wget \
+        libgl1-mesa-glx \
+        libgl1-mesa-dri
 
 ARG GEANT_VERSION
 ARG PARALLEL
 ARG INSTALL_DATA
-
+RUN useradd -ms /bin/bash geant && usermod -a -G video geant
+RUN mkdir /opt/geant4 && chown geant:geant /opt/geant4
+USER geant
+WORKDIR /tmp
 RUN wget http://cern.ch/geant4-data/releases/geant4.$GEANT_VERSION.tar.gz && \
-    mkdir /opt/geant4 && \
     tar -xzvf ./geant4.$GEANT_VERSION.tar.gz -C /opt/geant4 && \
     mkdir /opt/geant4/geant4.$GEANT_VERSION.build
 WORKDIR /opt/geant4/geant4.$GEANT_VERSION.build
@@ -24,5 +37,8 @@ RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/geant4/geant4.$GEANT_VERSION.install \
 
 ENV GEANT_VERSION=$GEANT_VERSION
 RUN echo "export Geant4_DIR=$(dirname $(find /opt -name Geant4Config.cmake | grep install))/" >> /opt/geant4/geant4.$GEANT_VERSION.install/bin/geant4.sh
+WORKDIR /opt/geant4/geant4.$GEANT_VERSION.install
+
+RUN rm -rf /opt/geant4/geant4.$GEANT_VERSION.build && rm -rf /opt/geant4/geant4.$GEANT_VERSION
 
 CMD [ "bash" ]
