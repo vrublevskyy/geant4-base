@@ -7,8 +7,8 @@ do
         h) echo '
             Options:
 
-                -v GEANT_VERSION. Default 4.10.04.p02
-                -i Docker image. Ex: test/geant4
+                -v GEANT_VERSION.
+                -i Docker image. Ex: test/geant4:10.06.p01
                 -d Install data [ON|OFF]. Default ON
                 -f Dockerfile. Default: Dockerfile
                 ' && exit;;
@@ -29,7 +29,7 @@ fi
 #Set latest version if not defined
 if [ -z $GEANT_VERSION ]; then
 
-    GEANT_VERSION=10.05
+    GEANT_VERSION=10.06.p01
 fi
 
 #Install data if not specified
@@ -49,10 +49,7 @@ if [ -z $PARALLEL ]; then
     PARALLEL=$(cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l) 
 fi
 
-docker build -t $DOCKER_IMAGE:$GEANT_VERSION \
+docker build -t $DOCKER_IMAGE \
             --build-arg GEANT_VERSION=$GEANT_VERSION \
             --build-arg PARALLEL=$PARALLEL \
             --build-arg INSTALL_DATA=$INSTALL_DATA -f $DOCKERFILE .
-
-#docker-squash $(docker images $DOCKER_IMAGE:$GEANT_VERSION-tmp -q) -t $DOCKER_IMAGE:$GEANT_VERSION
-#docker rmi $DOCKER_IMAGE:$GEANT_VERSION-tmp 
