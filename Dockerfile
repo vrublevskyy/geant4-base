@@ -1,24 +1,16 @@
 FROM ubuntu:18.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update &&  apt-get install -y libxerces-c-dev \
-        qt4-dev-tools \
-        freeglut3-dev \
-        libmotif-dev \
-        tk-dev \
-        cmake \
-        libxpm-dev \
-        libxmu-dev \
-        libxi-dev \
-        wget \
-        libgl1-mesa-glx \
-        libgl1-mesa-dri
+RUN apt-get update &&  apt-get install -y wget cmake libxerces-c-dev qt5-default freeglut3-dev libmotif-dev tk-dev  libxpm-dev libxmu-dev libxi-dev
 
 ARG GEANT_VERSION
 ARG PARALLEL
 ARG INSTALL_DATA
 RUN useradd -ms /bin/bash geant && usermod -a -G video geant
 RUN mkdir /opt/geant4 && chown geant:geant /opt/geant4
+ADD ./install-novnc-deps.sh /root/
+RUN apt-get install -y git xvfb x11vnc && cd /home/geant && wget https://github.com/novnc/noVNC/archive/v1.1.0.tar.gz && tar -xzvf v1.1.0.tar.gz  && ln -s /usr/bin/python3.6 /usr/bin/python && /root/install-novnc-deps.sh /home/geant/noVNC-1.1.0/utils && chown -R geant:geant /home/geant/noVNC-1.1.0
+
 USER geant
 WORKDIR /tmp
 RUN wget http://cern.ch/geant4-data/releases/geant4.$GEANT_VERSION.tar.gz && \
@@ -27,7 +19,6 @@ RUN wget http://cern.ch/geant4-data/releases/geant4.$GEANT_VERSION.tar.gz && \
 WORKDIR /opt/geant4/geant4.$GEANT_VERSION.build
 RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/geant4/geant4.$GEANT_VERSION.install \
           -DGEANT4_USE_GDML=ON \
-          -DCMAKE_BUILD_TYPE=Debug \
           -DGEANT4_INSTALL_DATA=$INSTALL_DATA \
           -DGEANT4_USE_OPENGL_X11=ON \
           -DGEANT4_USE_XM=ON \
